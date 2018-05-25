@@ -30,14 +30,9 @@ func init() {
 }
 
 // Put takes an image url, downloads that image and uploads it to s3/spaces location and returns the new url string
-func Put(url, newname string) (string, error) {
+func Put(url, newname string) (string, <-chan error) {
 	// Download the image to s3/spaces
-	loc, err := downloadImage(url, newname)
-	if err != nil {
-		return "", err
-	}
-
-	return loc, nil
+	return downloadImage(url, newname)
 }
 
 // List returns a list of all the file names in the s3/spaces bucket
@@ -57,21 +52,27 @@ func List() ([]string, error) {
 }
 
 // downloadImage downloads an image from a given url and uploads it to s3/spaces
-func downloadImage(url, newfilename string) (string, error) {
+func downloadImage(url, newfilename string) (string, <-chan error) {
 	loc := fmt.Sprintf("%s/%s", spacesURL, newfilename)
 
 	// Download and re-upload the image in the background
+	errCh := make(chan error, 1)
 	go func() {
+		defer close(errCh)
 		resp, err := http.Get(url)
 		if err != nil {
+			errCh <- fmt.Errorf("failed to download image: %v", err)
 			return
 		}
 		defer resp.Body.Close()
 
-		storeImage(resp.Body, newfilename)
+		if _, err = storeImage(resp.Body, newfilename); err != nil {
+			errCh <- err
+			return
+		}
 	}()
 
-	return loc, nil
+	return loc, errCh
 }
 
 // storeImage copies data to a s3/spaces location
