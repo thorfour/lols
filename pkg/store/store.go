@@ -4,13 +4,25 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/minio/minio-go"
 )
 
 var (
-	spacesURL string
+	endpoint  string
+	accessKey string
+	secretKey string
+	name      string
 )
+
+func init() {
+	accessKey = os.Getenv("SPACES_KEY")
+	secretKey = os.Getenv("SPACES_SECRET")
+	endpoint = os.Getenv("SPACES_ENDPOINT")
+	name = "lols"
+	ssl := true
+}
 
 // Put takes an image url, downloads that image and uploads it to s3/spaces location and returns the new url string
 func Put(url, newname string) (string, error) {
@@ -60,9 +72,8 @@ func downloadImage(url, newfilename string) (string, error) {
 func storeImage(img io.Reader, name string) (string, error) {
 	// Upload the image
 	// TODO
-	client, err := minio.New("", "", "", false)
+	client, err := minio.New(endpoint, accessKey, secretKey, ssl)
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to datastore: ", err)
 	}
-	return "", nil
 }
