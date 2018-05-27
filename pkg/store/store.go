@@ -18,14 +18,14 @@ var (
 	endpoint  string
 	accessKey string
 	secretKey string
-	name      string
+	bucket    string
 )
 
 func init() {
 	accessKey = os.Getenv("SPACES_KEY")
 	secretKey = os.Getenv("SPACES_SECRET")
 	endpoint = os.Getenv("SPACES_ENDPOINT")
-	name = "lols"
+	bucket = os.Getenv("SPACES_BUCKET")
 }
 
 // Put takes an image url, downloads that image and uploads it to s3/spaces location and returns the new url string
@@ -81,7 +81,9 @@ func storeImage(img io.Reader, size int64, name string) (string, error) {
 		return "", fmt.Errorf("failed to connect to datastore: %v", err)
 	}
 
-	if _, err := client.PutObject(version, name, img, size, minio.PutObjectOptions{}); err != nil {
+	if _, err := client.PutObject(bucket, name, img, size, minio.PutObjectOptions{
+		ContentType: "image/jpeg",
+	}); err != nil {
 		return "", fmt.Errorf("failed to store image: %v", err)
 	}
 
