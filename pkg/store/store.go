@@ -65,7 +65,7 @@ func downloadImage(url, newfilename string) (string, <-chan error) {
 		}
 		defer resp.Body.Close()
 
-		if _, err = storeImage(resp.Body, newfilename); err != nil {
+		if _, err = storeImage(resp.Body, resp.ContentLength, newfilename); err != nil {
 			errCh <- err
 			return
 		}
@@ -75,13 +75,13 @@ func downloadImage(url, newfilename string) (string, <-chan error) {
 }
 
 // storeImage copies data to a s3/spaces location
-func storeImage(img io.Reader, name string) (string, error) {
+func storeImage(img io.Reader, size int64, name string) (string, error) {
 	client, err := minio.New(endpoint, accessKey, secretKey, ssl)
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to datastore: %v", err)
 	}
 
-	if _, err := client.PutObject(version, name, img, -1, minio.PutObjectOptions{}); err != nil {
+	if _, err := client.PutObject(version, name, img, size, minio.PutObjectOptions{}); err != nil {
 		return "", fmt.Errorf("failed to store image: %v", err)
 	}
 
