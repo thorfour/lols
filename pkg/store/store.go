@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	version = "v0.0.0"
-	ssl     = true
+	ssl = true
 )
 
 var (
@@ -50,7 +49,6 @@ func List() ([]string, error) {
 	client := s3.New(s)
 
 	var objects []string
-	bucket := version
 	o, err := client.ListObjects(&s3.ListObjectsInput{
 		Bucket: &bucket,
 	})
@@ -67,7 +65,7 @@ func List() ([]string, error) {
 
 // downloadImage downloads an image from a given url and uploads it to s3/spaces
 func downloadImage(url, newfilename string) (string, <-chan error) {
-	loc := fmt.Sprintf("%s/%s/%s", endpoint, version, newfilename)
+	loc := fmt.Sprintf("%s.%s/%s", bucket, endpoint, newfilename)
 
 	// Download and re-upload the image in the background
 	errCh := make(chan error, 1)
