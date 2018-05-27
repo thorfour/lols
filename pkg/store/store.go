@@ -10,9 +10,8 @@ import (
 )
 
 const (
-	version   = "v1"
-	ssl       = true
-	spacesURL = "" // TODO
+	version = "v0.0.0"
+	ssl     = true
 )
 
 var (
@@ -53,7 +52,7 @@ func List() ([]string, error) {
 
 // downloadImage downloads an image from a given url and uploads it to s3/spaces
 func downloadImage(url, newfilename string) (string, <-chan error) {
-	loc := fmt.Sprintf("%s/%s", spacesURL, newfilename)
+	loc := fmt.Sprintf("%s/%s/%s", endpoint, version, newfilename)
 
 	// Download and re-upload the image in the background
 	errCh := make(chan error, 1)
