@@ -6,7 +6,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/minio/minio-go"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 const (
@@ -15,17 +19,22 @@ const (
 )
 
 var (
-	endpoint  string
-	accessKey string
-	secretKey string
-	bucket    string
+	endpoint string
+	bucket   string
+	s3Config *aws.Config
 )
 
 func init() {
-	accessKey = os.Getenv("SPACES_KEY")
-	secretKey = os.Getenv("SPACES_SECRET")
+	accessKey := os.Getenv("SPACES_KEY")
+	secretKey := os.Getenv("SPACES_SECRET")
 	endpoint = os.Getenv("SPACES_ENDPOINT")
 	bucket = os.Getenv("SPACES_BUCKET")
+
+	s3Config = &aws.Config{
+		Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
+		Endpoint:    aws.String(endpoint),
+		Region:      aws.String("us-east-1"),
+	}
 }
 
 // Put takes an image url, downloads that image and uploads it to s3/spaces location and returns the new url string
@@ -37,14 +46,20 @@ func Put(url, newname string) (string, <-chan error) {
 // List returns a list of all the file names in the s3/spaces bucket
 // This function is meant to be called once on startup, and the results cached
 func List() ([]string, error) {
-	client, err := minio.New(endpoint, accessKey, secretKey, ssl)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to datastore: %v", err)
-	}
+	s := session.New(s3Config)
+	client := s3.New(s)
 
 	var objects []string
-	for o := range client.ListObjects(version, "", false, nil) {
-		objects = append(objects, o.Key)
+	bucket := version
+	o, err := client.ListObjects(&s3.ListObjectsInput{
+		Bucket: &bucket,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list objects: %v", err)
+	}
+
+	for _, r := range o.Contents {
+		objects = append(objects, *r.Key)
 	}
 
 	return objects, nil
@@ -65,7 +80,7 @@ func downloadImage(url, newfilename string) (string, <-chan error) {
 		}
 		defer resp.Body.Close()
 
-		if _, err = storeImage(resp.Body, resp.ContentLength, newfilename); err != nil {
+		if err := storeImage(resp.Body, resp.ContentLength, newfilename); err != nil {
 			errCh <- err
 			return
 		}
@@ -75,17 +90,21 @@ func downloadImage(url, newfilename string) (string, <-chan error) {
 }
 
 // storeImage copies data to a s3/spaces location
-func storeImage(img io.Reader, size int64, name string) (string, error) {
-	client, err := minio.New(endpoint, accessKey, secretKey, ssl)
-	if err != nil {
-		return "", fmt.Errorf("failed to connect to datastore: %v", err)
-	}
+func storeImage(img io.Reader, size int64, name string) error {
+	s := session.New(s3Config)
+	uploader := s3manager.NewUploader(s)
 
-	if _, err := client.PutObject(bucket, name, img, size, minio.PutObjectOptions{
-		ContentType: "image/jpeg",
+	acl := "public-read"
+	imgtype := "image/jpeg"
+	if _, err := uploader.Upload(&s3manager.UploadInput{
+		ACL:         &acl,
+		Bucket:      &bucket,
+		Key:         &name,
+		ContentType: &imgtype,
+		Body:        img,
 	}); err != nil {
-		return "", fmt.Errorf("failed to store image: %v", err)
+		return fmt.Errorf("failed to store image: %v", err)
 	}
 
-	return name, nil
+	return nil
 }
