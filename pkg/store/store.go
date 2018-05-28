@@ -44,11 +44,10 @@ func Put(url, newname string) (string, <-chan error) {
 
 // List returns a list of all the file names in the s3/spaces bucket
 // This function is meant to be called once on startup, and the results cached
-func List() ([]string, error) {
+func List() (<-chan string, error) {
 	s := session.New(s3Config)
 	client := s3.New(s)
 
-	var objects []string
 	o, err := client.ListObjects(&s3.ListObjectsInput{
 		Bucket: &bucket,
 	})
@@ -56,11 +55,15 @@ func List() ([]string, error) {
 		return nil, fmt.Errorf("failed to list objects: %v", err)
 	}
 
-	for _, r := range o.Contents {
-		objects = append(objects, *r.Key)
-	}
+	out := make(chan string, len(o.Contents))
+	go func() {
+		defer close(out)
+		for _, r := range o.Contents {
+			out <- *r.Key
+		}
+	}()
 
-	return objects, nil
+	return out, nil
 }
 
 // downloadImage downloads an image from a given url and uploads it to s3/spaces

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -24,7 +25,12 @@ func TestList(t *testing.T) {
 		t.Fatalf("failed to list images: %v", err)
 	}
 
-	if len(s) == 0 {
+	count := 0
+	for n := range s {
+		fmt.Println(n)
+		count++
+	}
+	if count == 0 {
 		t.Fatal("list returned 0 results")
 	}
 }
