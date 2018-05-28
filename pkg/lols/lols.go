@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+
+	"github.com/thorfour/lols/pkg/store"
 )
 
 var commands = map[string]func([]string) (string, error){
@@ -25,7 +27,38 @@ func Handle(cmd string, args []string) (string, error) {
 	return f(args)
 }
 
-func newLol(args []string) (string, error) { return "", nil }
+// Sync the internal cache of imageNames, should be run in a separate go routine
+func Sync() error {
+	out, err := store.List()
+	if err != nil {
+		return fmt.Errorf("failed to list: %v", err)
+	}
+
+	// TODO imageNames should be locked to avoid data races
+	imageNames = make([]string, len(imageNames))
+	for n := range out {
+		imageNames = append(imageNames, n)
+	}
+
+	return nil
+}
+
+func newLol(args []string) (string, error) {
+	if len(args) != 2 {
+		return "", fmt.Errorf("invalid number of arguments")
+	}
+
+	img := args[0]
+	newname := args[1]
+
+	// TODO async handle these errors
+	loc, _ := store.Put(img, newname)
+
+	// Add the image to the cache
+	imageNames = append(imageNames, loc)
+
+	return loc, nil
+}
 
 type result struct {
 	name  string
