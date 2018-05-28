@@ -14,5 +14,5 @@ func Handler(v url.Values) (string, error) {
 	if len(text) > 1 {
 		args = text[1:]
 	}
-	return lols.Handle(text[0], args...)
+	return lols.Handle(text[0], args)
 }
