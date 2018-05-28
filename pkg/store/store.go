@@ -83,7 +83,7 @@ func downloadImage(url, newfilename string) (string, <-chan error) {
 		defer resp.Body.Close()
 
 		contentType := resp.Header.Get("Content-Type")
-		if err := storeImage(resp.Body, resp.ContentLength, contentType, newfilename); err != nil {
+		if err := storeImage(resp.Body, resp.ContentLength, contentType, filepath.Base(loc)); err != nil {
 			errCh <- err
 			return
 		}
@@ -118,7 +118,7 @@ func storeImage(img io.Reader, size int64, contentType string, name string) erro
 func getNewFilePath(url, newfilename string) string {
 	ext := filepath.Ext(url)
 	if filepath.Ext(newfilename) == "" { // Copy the same file extension over
-		newfilename = fmt.Sprintf("%s.%s", newfilename, ext)
+		newfilename = fmt.Sprintf("%s%s", newfilename, ext)
 	}
 	loc := fmt.Sprintf("%s.%s/%s", bucket, endpoint, newfilename)
 
