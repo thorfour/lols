@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -68,7 +69,7 @@ func List() (<-chan string, error) {
 
 // downloadImage downloads an image from a given url and uploads it to s3/spaces
 func downloadImage(url, newfilename string) (string, <-chan error) {
-	loc := fmt.Sprintf("%s.%s/%s", bucket, endpoint, newfilename)
+	loc := getNewFilePath(url, newfilename)
 
 	// Download and re-upload the image in the background
 	errCh := make(chan error, 1)
@@ -81,7 +82,8 @@ func downloadImage(url, newfilename string) (string, <-chan error) {
 		}
 		defer resp.Body.Close()
 
-		if err := storeImage(resp.Body, resp.ContentLength, newfilename); err != nil {
+		contentType := resp.Header.Get("Content-Type")
+		if err := storeImage(resp.Body, resp.ContentLength, contentType, newfilename); err != nil {
 			errCh <- err
 			return
 		}
@@ -91,21 +93,34 @@ func downloadImage(url, newfilename string) (string, <-chan error) {
 }
 
 // storeImage copies data to a s3/spaces location
-func storeImage(img io.Reader, size int64, name string) error {
+func storeImage(img io.Reader, size int64, contentType string, name string) error {
 	s := session.New(s3Config)
 	uploader := s3manager.NewUploader(s)
 
 	acl := "public-read"
-	imgtype := "image/jpeg"
+	if contentType == "" {
+		contentType = "image/jpeg"
+	}
 	if _, err := uploader.Upload(&s3manager.UploadInput{
 		ACL:         &acl,
 		Bucket:      &bucket,
 		Key:         &name,
-		ContentType: &imgtype,
+		ContentType: &contentType,
 		Body:        img,
 	}); err != nil {
 		return fmt.Errorf("failed to store image: %v", err)
 	}
 
 	return nil
+}
+
+// getNewFilePath returns the new file location for the given old and new name
+func getNewFilePath(url, newfilename string) string {
+	ext := filepath.Ext(url)
+	if filepath.Ext(newfilename) == "" { // Copy the same file extension over
+		newfilename = fmt.Sprintf("%s.%s", newfilename, ext)
+	}
+	loc := fmt.Sprintf("%s.%s/%s", bucket, endpoint, newfilename)
+
+	return loc
 }
