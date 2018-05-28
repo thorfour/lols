@@ -120,7 +120,7 @@ func getNewFilePath(url, newfilename string) string {
 	if filepath.Ext(newfilename) == "" { // Copy the same file extension over
 		newfilename = fmt.Sprintf("%s%s", newfilename, ext)
 	}
-	loc := fmt.Sprintf("%s.%s/%s", bucket, endpoint, newfilename)
+	loc := fmt.Sprintf("https://%s.%s/%s", bucket, endpoint, newfilename)
 
 	return loc
 }
