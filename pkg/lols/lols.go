@@ -15,7 +15,12 @@ var commands = map[string]func([]string) (string, error){
 var (
 	// internal cache of image names
 	imageNames []string
+	imagesLock *sync.RWMutex
 )
+
+func init() {
+	imagesLock = new(sync.RWMutex)
+}
 
 // Handle responds to given commands
 func Handle(cmd string, args []string) (string, error) {
@@ -34,7 +39,8 @@ func Sync() error {
 		return fmt.Errorf("failed to list: %v", err)
 	}
 
-	// TODO imageNames should be locked to avoid data races
+	imagesLock.Lock()
+	defer imagesLock.Unlock()
 	imageNames = make([]string, len(imageNames))
 	for n := range out {
 		imageNames = append(imageNames, n)
@@ -55,6 +61,8 @@ func newLol(args []string) (string, error) {
 	loc, _ := store.Put(img, newname)
 
 	// Add the image to the cache
+	imagesLock.Lock()
+	defer imagesLock.Unlock()
 	imageNames = append(imageNames, loc)
 
 	return loc, nil
@@ -69,6 +77,8 @@ type result struct {
 func getLol(args []string) (string, error) {
 
 	// Look through all the images for a matching filename
+	imagesLock.RLock()
+	defer imagesLock.RUnlock()
 	results := make(chan result, len(imageNames))
 	wg := new(sync.WaitGroup)
 	wg.Add(len(imageNames))
