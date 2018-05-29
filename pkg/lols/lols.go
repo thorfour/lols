@@ -65,7 +65,8 @@ func newLol(args []string) (string, error) {
 	defer imagesLock.Unlock()
 	imageNames = append(imageNames, loc)
 
-	return loc, nil
+	// wrap it as an error to be returned as an ephemeral message
+	return "", fmt.Errorf("Added")
 }
 
 type result struct {
