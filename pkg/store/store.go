@@ -60,7 +60,7 @@ func List() (<-chan string, error) {
 	go func() {
 		defer close(out)
 		for _, r := range o.Contents {
-			out <- *r.Key
+			out <- fmt.Sprintf("https://%s.%s/%s", bucket, endpoint, *r.Key)
 		}
 	}()
 
