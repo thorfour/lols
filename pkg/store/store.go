@@ -15,7 +15,17 @@ import (
 )
 
 const (
-	ssl = true
+	// B = Byte
+	B = 1
+	// KB = Kilobyte
+	KB = B << 10
+	// MB = Megabyte
+	MB = KB << 10
+)
+
+const (
+	ssl          = true
+	maxImageSize = 6 * MB
 )
 
 var (
@@ -81,6 +91,11 @@ func downloadImage(url, newfilename string) (string, <-chan error) {
 			return
 		}
 		defer resp.Body.Close()
+
+		if resp.ContentLength > maxImageSize {
+			errCh <- fmt.Errorf("file size too large")
+			return
+		}
 
 		contentType := resp.Header.Get("Content-Type")
 		if err := storeImage(resp.Body, resp.ContentLength, contentType, filepath.Base(loc)); err != nil {
