@@ -2,6 +2,7 @@ package lols
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -117,8 +118,9 @@ func match(n string, args []string, results chan<- result, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	count := 0
+	name := filepath.Base(n)
 	for _, a := range args {
-		if strings.Contains(strings.ToLower(n), strings.ToLower(a)) {
+		if strings.Contains(strings.ToLower(name), strings.ToLower(a)) {
 			count++
 		}
 	}

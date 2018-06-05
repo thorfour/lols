@@ -23,3 +23,15 @@ func TestGetLol(t *testing.T) {
 		t.Errorf("unexpected %s", n)
 	}
 }
+
+func TestLolPaths(t *testing.T) {
+	imageNames = []string{"testing.paths.com/bit_t.jpg", "testing.paths.com/bit.jpg"}
+	n, err := getLol([]string{"bit", "t"})
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	if n != "testing.paths.com/bit.jpg" {
+		t.Errorf("unexpected %s", n)
+	}
+}
