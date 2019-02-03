@@ -30,7 +30,7 @@ go_cgo = @docker run \
 
 clean:
 	rm -rf ./bin
-	cp -f ca-certificates.crt
+	rm -f ca-certificates.crt
 plugin: 
 	mkdir -p ./bin/plugin
 	$(go_cgo) build -buildmode=plugin -o ./bin/plugin/$(BIN) ./cmd/plugin/
