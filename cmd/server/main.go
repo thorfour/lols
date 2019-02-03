@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/url"
 	"strings"
@@ -9,6 +10,12 @@ import (
 	"github.com/thorfour/lols/pkg/lols"
 	"github.com/thorfour/sillyputty/pkg/sillyputty"
 )
+
+var port = flag.Int("p", 80, "port to serve on")
+
+func init() {
+	flag.Parse()
+}
 
 func main() {
 	logrus.Info("Starting lols server")
@@ -29,5 +36,6 @@ func main() {
 		}),
 	)
 
+	s.Port = *port
 	s.Run()
 }
