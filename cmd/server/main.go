@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 
@@ -19,6 +20,11 @@ func init() {
 
 func main() {
 	logrus.Info("Starting lols server")
+
+	// Sync internal cache on start
+	if err := lols.Sync(); err != nil {
+		log.Fatal(fmt.Sprintf("Failed to sync: %v", err))
+	}
 
 	s := sillyputty.New("/v1",
 		sillyputty.HandlerOpt("/lols", func(v url.Values) (string, error) {
