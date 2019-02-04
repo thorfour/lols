@@ -59,7 +59,7 @@ spec:
     spec:
       containers:
       - name: lols
-        image: quay.io/thorfour/lols:v1.0.1
+        image: quay.io/thorfour/lols:v1.0.4
         env:
         - name: SPACES_KEY
           valueFrom:
