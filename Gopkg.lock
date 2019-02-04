@@ -71,7 +71,7 @@
   branch = "master"
   name = "github.com/thorfour/sillyputty"
   packages = ["pkg/sillyputty"]
-  revision = "3de3a05b036f711182bd3a7ffb58fe1810be9389"
+  revision = "78c490def6e8f0204ecaad5b3018df62d89a7388"
 
 [[projects]]
   branch = "master"
@@ -90,7 +90,7 @@
     "unix",
     "windows"
   ]
-  revision = "7ae0202eb74c2b534255c71b5a15fa4115aabbcc"
+  revision = "980327fe3c65509adaad5a9ff06abdf7611b4411"
 
 [solve-meta]
   analyzer-name = "dep"
