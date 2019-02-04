@@ -59,7 +59,22 @@ spec:
     spec:
       containers:
       - name: lols
-        image: quay.io/thorfour/lols:v1.0.0
+        image: quay.io/thorfour/lols:v1.0.1
+        env:
+        - name: SPACES_KEY
+          valueFrom:
+            secretKeyRef:
+              name: spaces-secrets
+              key: key
+        - name: SPACES_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: spaces-secrets
+              key: secret
+        - name: SPACES_BUCKET
+          value: lols
+        - name: SPACES_ENDPOINT
+          value: nyc3.digitaloceanspaces.com
         ports:
         - containerPort: 8800
 ---
