@@ -10,7 +10,9 @@ import (
 )
 
 var commands = map[string]func([]string) (string, error){
-	"new": newLol,
+	"new":  newLol,
+	"add":  newLol,
+	"help": helpLol,
 }
 
 var (
@@ -126,4 +128,8 @@ func match(n string, args []string, results chan<- result, wg *sync.WaitGroup) {
 	}
 
 	results <- result{name: n, match: count}
+}
+
+func helpLol(_ []string) (string, error) {
+	return "", fmt.Errorf("'new <image_url> <image name>' to store a new lolmergency")
 }
